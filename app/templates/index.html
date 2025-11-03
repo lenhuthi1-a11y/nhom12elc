@@ -1,0 +1,345 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Điểm danh - {{ session.subject_name }}</title>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Tailwind: set Inter as default sans -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ["Inter","system-ui","-apple-system","Segoe UI","Roboto","Helvetica","Arial","Noto Sans","Apple Color Emoji","Segoe UI Emoji","sans-serif"]
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts: Inter (preconnect + display=swap) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap"
+    rel="stylesheet">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+  <style>
+    /* ===== Đồng bộ font toàn trang ===== */
+    :root { --app-font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", sans-serif; }
+    html, body { font-family: var(--app-font); }
+    button, input, select, textarea { font: inherit; }       /* form controls thừa kế font */
+    table, thead, tbody, tfoot, th, td { font: inherit; }    /* bảng thừa kế font */
+    /* (Canvas không nhận font từ CSS khi vẽ; đã set trong JS dưới) */
+
+    /* Camera overlay */
+    #video-container { position: relative; }
+    #overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+
+    /* Buttons (không dùng @apply) */
+    .btn {
+      display:inline-flex;align-items:center;justify-content:center;gap:.5rem;
+      padding:.65rem 1rem;border-radius:.75rem;font-weight:700;color:#fff;
+      transition:all .25s ease;box-shadow:0 8px 22px rgba(0,0,0,.25)
+    }
+    .btn:disabled{filter:grayscale(.3);opacity:.9;cursor:not-allowed;box-shadow:none}
+    .btn-start{background:linear-gradient(90deg,#2563eb 0%,#14b8a6 100%);box-shadow:0 10px 24px rgba(37,99,235,.35)}
+    .btn-start:hover{filter:brightness(1.05);transform:translateY(-1px)}
+    .btn-export{background:#16a34a;box-shadow:0 10px 24px rgba(22,163,74,.35)}
+    .btn-export:hover{filter:brightness(1.05);transform:translateY(-1px)}
+    .btn-stop{background:#dc2626;box-shadow:0 10px 24px rgba(220,38,38,.35)}
+    .btn-stop:hover{filter:brightness(1.05);transform:translateY(-1px)}
+
+    /* Status pills */
+    .status-pill{display:inline-block;padding:.35rem .75rem;border-radius:999px;font-size:.75rem;font-weight:800;border:1px solid transparent;box-shadow:inset 0 0 0 1px rgba(255,255,255,.04),0 6px 16px rgba(0,0,0,.25)}
+    .status-ontime{color:#86efac;background:rgba(34,197,94,.14);border-color:rgba(34,197,94,.55)}
+    .status-late{color:#fde68a;background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.55)}
+
+    /* Error banner */
+    #error-banner{display:none;background:linear-gradient(90deg,#7f1d1d 0%,#991b1b 100%);color:#fff;padding:1rem;border-radius:.75rem;margin-bottom:1rem;font-weight:700;letter-spacing:.2px;box-shadow:0 10px 24px rgba(185,28,28,.35)}
+
+    /* Table */
+    table{width:100%;border-collapse:collapse}
+    thead th{position:sticky;top:0;background:#374151;z-index:1}
+  </style>
+</head>
+
+<body class="bg-gray-950 text-gray-100 min-h-screen p-4 md:p-8 font-sans">
+  <div class="max-w-6xl mx-auto space-y-6">
+
+    <!-- Thông tin phiên -->
+    <section class="bg-gray-900/70 border border-gray-800 rounded-2xl p-6 shadow-2xl">
+      <header class="text-center">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-600/40 mb-3">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span class="text-emerald-300 text-xs font-semibold">Phiên đang mở</span>
+        </div>
+        <h1 class="text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400 tracking-wide">
+          {{ session.subject_name }} <span class="text-gray-400">({{ session.subject_code }})</span>
+        </h1>
+        <p class="text-lg md:text-xl text-gray-300 mt-2 font-semibold">{{ session.class_name }}</p>
+      </header>
+
+      <div class="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="bg-gray-800/60 border border-gray-700 rounded-xl p-4 text-center">
+          <p class="text-xs uppercase tracking-wider text-gray-400">Ngày giờ vào lớp (tính trễ)</p>
+          <p class="text-lg font-semibold text-yellow-300 mt-1">{{ session.class_start_time|date:"H:i, d/m/Y" }}</p>
+        </div>
+        <div class="bg-gray-800/60 border border-gray-700 rounded-xl p-4 text-center">
+          <p class="text-xs uppercase tracking-wider text-gray-400">Cửa sổ điểm danh</p>
+          <p class="text-lg text-gray-200 mt-1">
+            {{ session.session_start_time|date:"H:i" }} – {{ session.end_time|date:"H:i" }}
+          </p>
+        </div>
+        <div class="bg-gray-800/60 border border-gray-700 rounded-xl p-4 text-center">
+          <p class="text-xs uppercase tracking-wider text-gray-400">Mẹo</p>
+          <p class="text-sm text-gray-300 mt-1">Giữ mặt trong khung, ánh sáng đều, tránh ngược sáng.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Banner lỗi -->
+    <div id="error-banner" class="flex items-center justify-center gap-3">
+      <i class="fas fa-exclamation-triangle"></i>
+      <span id="error-message"></span>
+    </div>
+
+    <!-- Camera + Nút -->
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Camera -->
+      <div class="lg:col-span-2">
+        <div id="video-container"
+             class="bg-black rounded-2xl overflow-hidden shadow-2xl ring-1 ring-gray-800 focus-within:ring-2 focus-within:ring-blue-500 transition-all aspect-video">
+          <video id="webcam" class="w-full h-full" autoplay playsinline muted></video>
+          <canvas id="overlay"></canvas>
+          {% csrf_token %}
+          <input type="hidden" id="session-id" value="{{ session.id }}">
+        </div>
+        <p class="text-xs text-gray-500 mt-2">
+          * Trình duyệt sẽ yêu cầu quyền camera. Nếu không thấy hình, hãy kiểm tra quyền truy cập.
+        </p>
+      </div>
+
+      <!-- Nút điều khiển -->
+      <aside class="lg:col-span-1 bg-gray-900/70 border border-gray-800 rounded-2xl p-6 shadow-xl flex flex-col gap-4">
+        <button id="startButton" class="btn btn-start text-base md:text-lg">
+          <i class="fas fa-video"></i>
+          BẮT ĐẦU
+        </button>
+
+        <a href="{% url 'export_session_csv' session_id=session.id %}"
+           class="btn btn-export text-base md:text-lg" target="_blank" rel="noopener">
+          <i class="fas fa-file-csv"></i>
+          XUẤT CSV
+        </a>
+
+        <a href="{% url 'setup_session' %}" class="btn btn-stop text-base md:text-lg">
+          <i class="fas fa-stop-circle"></i>
+          KẾT THÚC PHIÊN
+        </a>
+
+        <div class="mt-2 rounded-xl bg-gray-800/60 border border-gray-700 p-4">
+          <p class="text-sm font-semibold text-gray-200 mb-1">Lưu ý nhanh</p>
+          <ul class="text-sm text-gray-400 list-disc list-inside space-y-1">
+            <li>Chỉ ghi nhận lần đầu khi nhận diện thành công.</li>
+            <li>XUẤT CSV để tải danh sách ngay.</li>
+          </ul>
+        </div>
+      </aside>
+    </section>
+
+    <!-- Bảng kết quả -->
+    <section class="bg-gray-900/70 border border-gray-800 rounded-2xl p-5 shadow-inner">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-xl md:text-2xl font-semibold text-teal-300">Kết quả điểm danh</h2>
+      </div>
+
+      <div class="overflow-auto rounded-xl border border-gray-800">
+        <table class="min-w-full">
+          <thead class="bg-gray-700/90 text-gray-100">
+            <tr>
+              <th class="py-3 px-4 text-left text-xs font-semibold uppercase tracking-wider">Mã SV</th>
+              <th class="py-3 px-4 text-left text-xs font-semibold uppercase tracking-wider">Họ tên</th>
+              <th class="py-3 px-4 text-left text-xs font-semibold uppercase tracking-wider">Giờ vào (VN)</th>
+              <th class="py-3 px-4 text-left text-xs font-semibold uppercase tracking-wider">Trạng thái</th>
+            </tr>
+          </thead>
+          <tbody id="resultsBody" class="divide-y divide-gray-800">
+            {% if not logs %}
+            <tr id="placeholder-row" class="bg-gray-900/40">
+              <td colspan="4" class="py-4 px-4 text-gray-400 text-center">Chưa có ai điểm danh...</td>
+            </tr>
+            {% endif %}
+            {% for log in logs %}
+            <tr id="row-{{ log.ma_sv }}" class="bg-gray-900/40 hover:bg-gray-800/70 transition-colors">
+              <td class="py-3 px-4 font-mono">{{ log.ma_sv }}</td>
+              <td class="py-3 px-4 font-medium">{{ log.ho_ten }}</td>
+              <td class="py-3 px-4 font-mono">{{ log.gio_vao|date:"d/m/Y, H:i:s" }}</td>
+              <td class="py-3 px-4">
+                <span class="status-pill {% if log.status == 'Đúng giờ' %}status-ontime{% else %}status-late{% endif %}">
+                  {{ log.status }}
+                </span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <!-- JS: giữ nguyên logic; đảm bảo canvas vẽ bằng Inter -->
+  <script>
+    const webcamElement   = document.getElementById('webcam');
+    const overlayElement  = document.getElementById('overlay');
+    const startButton     = document.getElementById('startButton');
+    const resultsBody     = document.getElementById('resultsBody');
+    const placeholderRow  = document.getElementById('placeholder-row');
+    const errorBanner     = document.getElementById('error-banner');
+    const errorMessageSpan= document.getElementById('error-message');
+
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const sessionId = document.getElementById('session-id').value;
+
+    let recognitionInterval = null;
+    let videoStream = null;
+    let isProcessing = false;
+    const snapshotCanvas = document.createElement('canvas');
+
+    startButton.addEventListener('click', startWebcam);
+
+    async function startWebcam() {
+      startButton.disabled = true;
+      startButton.innerText = "Đang tải Camera...";
+      errorBanner.style.display = 'none';
+
+      try {
+        videoStream = await navigator.mediaDevices.getUserMedia({
+          video: { width: 1280, height: 720 }, audio: false
+        });
+        webcamElement.srcObject = videoStream;
+        webcamElement.onloadedmetadata = () => {
+          webcamElement.play();
+
+          const displaySize = { width: webcamElement.clientWidth, height: webcamElement.clientHeight };
+          overlayElement.width = displaySize.width;
+          overlayElement.height = displaySize.height;
+
+          snapshotCanvas.width  = webcamElement.videoWidth  || 1280;
+          snapshotCanvas.height = webcamElement.videoHeight || 720;
+
+          recognitionInterval = setInterval(recognizeLoop, 300);
+          startButton.innerHTML = '<i class="fas fa-video"></i> Camera đang chạy';
+        };
+      } catch (err) {
+        console.error("Lỗi khi mở webcam:", err);
+        showError("Không thể mở webcam. Vui lòng cấp quyền truy cập camera.");
+        startButton.disabled = false;
+        startButton.innerHTML = '<i class="fas fa-video"></i> BẮT ĐẦU';
+      }
+    }
+
+    function stopRecognitionLoop() {
+      if (recognitionInterval) {
+        clearInterval(recognitionInterval);
+        recognitionInterval = null;
+      }
+      if (videoStream) {
+        videoStream.getTracks().forEach(track => track.stop());
+        webcamElement.srcObject = null;
+        videoStream = null;
+      }
+      const ctx = overlayElement.getContext('2d');
+      ctx.clearRect(0, 0, overlayElement.width, overlayElement.height);
+      startButton.disabled = false;
+      startButton.innerHTML = '<i class="fas fa-video"></i> BẮT ĐẦU';
+    }
+
+    async function recognizeLoop() {
+      if (isProcessing) return;
+
+      const ctx = overlayElement.getContext('2d');
+      const snapshotCtx = snapshotCanvas.getContext('2d');
+      snapshotCtx.drawImage(webcamElement, 0, 0, snapshotCanvas.width, snapshotCanvas.height);
+      const imageBase64 = snapshotCanvas.toDataURL('image/jpeg', 0.8);
+
+      isProcessing = true;
+      try {
+        const response = await fetch('/api/recognize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+          body: JSON.stringify({ image: imageBase64, session_id: sessionId })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          showError(data.error || `Lỗi server: ${response.statusText}`);
+          if (response.status === 410) stopRecognitionLoop();
+          throw new Error(data.error || 'Server error');
+        }
+
+        // VẼ: dùng đúng font Inter
+        ctx.clearRect(0, 0, overlayElement.width, overlayElement.height);
+        const scaleX = overlayElement.width / (webcamElement.videoWidth  || snapshotCanvas.width);
+        const scaleY = overlayElement.height/ (webcamElement.videoHeight || snapshotCanvas.height);
+
+        for (const res of data.results) {
+          const { ho_ten, ma_sv, bbox, gio_vao, status } = res;
+          const [x1, y1, x2, y2] = [
+            bbox[0] * scaleX, bbox[1] * scaleY,
+            bbox[2] * scaleX, bbox[3] * scaleY
+          ];
+
+          const color = (ma_sv === "Unknown") ? '#FF4D4F' : '#22c55e';
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 3;
+          ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
+
+          ctx.fillStyle = color;
+          ctx.font = '20px Inter, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+          ctx.fillText(ho_ten, x1, Math.max(20, y1 - 8));
+
+          if (ma_sv !== "Unknown" && gio_vao) {
+            addAttendanceRecord(ma_sv, ho_ten, gio_vao, status);
+          }
+        }
+      } catch (_) {
+        /* bỏ qua để vòng lặp tiếp tục */
+      } finally {
+        isProcessing = false;
+      }
+    }
+
+    function addAttendanceRecord(ma_sv, ho_ten, gio_vao, status) {
+      if (document.getElementById(`row-${ma_sv}`)) return;
+      const placeholderRow = document.getElementById('placeholder-row');
+      if (placeholderRow) placeholderRow.remove();
+
+      const newRow = resultsBody.insertRow(0);
+      newRow.id = `row-${ma_sv}`;
+      newRow.className = "bg-gray-900/40 hover:bg-gray-800/70 transition-colors";
+
+      const statusClass = (status === 'Đúng giờ') ? 'status-ontime' : 'status-late';
+      newRow.innerHTML = `
+        <td class="py-3 px-4 font-mono">${ma_sv}</td>
+        <td class="py-3 px-4 font-medium">${ho_ten}</td>
+        <td class="py-3 px-4 font-mono">${gio_vao}</td>
+        <td class="py-3 px-4"><span class="status-pill ${statusClass}">${status}</span></td>`;
+    }
+
+    function showError(message) {
+      errorMessageSpan.innerText = message || 'Có lỗi xảy ra.';
+      errorBanner.style.display = 'flex';
+    }
+  </script>
+</body>
+</html>

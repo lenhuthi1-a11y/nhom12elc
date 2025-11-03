@@ -1,0 +1,282 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cài đặt Phiên Điểm danh</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+  <style>
+    body { font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+    /* Dark-friendly picker */
+    input[type="datetime-local"], select { color-scheme: dark; }
+    input[type="datetime-local"]::-webkit-calendar-picker-indicator { filter: invert(1); }
+  </style>
+</head>
+
+<body class="bg-gray-950 text-gray-100 min-h-screen">
+  <!-- Header -->
+  <header class="border-b border-gray-800 bg-gradient-to-r from-[#0B1220] to-gray-900">
+    <div class="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-blue-600/20 flex items-center justify-center ring-1 ring-blue-500/30">
+          <i class="fa-solid fa-id-card-clip text-blue-400"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-semibold tracking-wide">Điểm danh AI</h1>
+          <p class="text-xs text-gray-400">Face Attendance • Django</p>
+        </div>
+      </div>
+
+      <nav class="hidden sm:flex items-center gap-3 text-sm">
+        <a class="text-gray-400 hover:text-gray-200" href="#"><i class="fa-solid fa-house"></i> Trang chủ</a>
+        <span class="text-gray-600">/</span>
+        <span class="text-blue-300 font-medium">Cài đặt phiên</span>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Steps -->
+  <section class="max-w-6xl mx-auto px-6 mt-6">
+    <ol class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <li class="flex items-center gap-3 p-4 rounded-xl bg-gray-900 border border-gray-800">
+        <span class="w-9 h-9 rounded-lg bg-blue-600/20 text-blue-300 ring-1 ring-blue-500/30 flex items-center justify-center font-semibold">1</span>
+        <div>
+          <p class="text-sm font-semibold">Cài đặt phiên</p>
+          <p class="text-xs text-gray-400">Nhập thông tin môn và lớp</p>
+        </div>
+      </li>
+      <li class="flex items-center gap-3 p-4 rounded-xl bg-gray-900/60 border border-gray-800">
+        <span class="w-9 h-9 rounded-lg bg-gray-700/40 text-gray-300 ring-1 ring-gray-700 flex items-center justify-center font-semibold">2</span>
+        <div>
+          <p class="text-sm font-semibold text-gray-300">Điểm danh</p>
+          <p class="text-xs text-gray-500">Nhận diện & ghi nhận</p>
+        </div>
+      </li>
+      <li class="flex items-center gap-3 p-4 rounded-xl bg-gray-900/60 border border-gray-800">
+        <span class="w-9 h-9 rounded-lg bg-gray-700/40 text-gray-300 ring-1 ring-gray-700 flex items-center justify-center font-semibold">3</span>
+        <div>
+          <p class="text-sm font-semibold text-gray-300">Xuất báo cáo</p>
+          <p class="text-xs text-gray-500">CSV/Excel tổng hợp</p>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <!-- Main -->
+  <main class="max-w-6xl mx-auto px-6 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Form (2 cột) -->
+      <div class="lg:col-span-2">
+        <div class="rounded-2xl bg-gray-900 border border-gray-800 shadow-2xl shadow-blue-900/10">
+          <div class="px-6 py-5 border-b border-gray-800">
+            <h2 class="text-lg font-semibold">Tạo Phiên Điểm danh</h2>
+            <p class="text-sm text-gray-400">Điền các trường bên dưới để bắt đầu</p>
+          </div>
+
+          <form method="POST" class="p-6 space-y-6">
+            {% csrf_token %}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Tên môn học -->
+              <div>
+                <label for="subject_name" class="block mb-2 text-sm font-medium text-gray-300">Tên môn học</label>
+                <div class="relative">
+                  <i class="fas fa-book absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                  <input id="subject_name" name="subject_name" required
+                         placeholder="VD: Hệ thống thông tin quản lý"
+                         class="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-gray-100 placeholder-gray-400
+                                focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"/>
+                </div>
+              </div>
+
+              <!-- Mã môn học -->
+              <div>
+                <label for="subject_code" class="block mb-2 text-sm font-medium text-gray-300">Mã môn học</label>
+                <div class="relative">
+                  <i class="fas fa-hashtag absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                  <input id="subject_code" name="subject_code" required placeholder="VD: MIS3010"
+                         class="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-gray-100 placeholder-gray-400
+                                focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"/>
+                </div>
+              </div>
+
+              <!-- Tên lớp -->
+              <div class="md:col-span-2">
+                <label for="class_name" class="block mb-2 text-sm font-medium text-gray-300">Tên lớp</label>
+                <div class="relative">
+                  <i class="fas fa-users absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                  <input id="class_name" name="class_name" required placeholder="VD: 51K27.1"
+                         class="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-gray-100 placeholder-gray-400
+                                focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"/>
+                </div>
+              </div>
+
+              <!-- Giờ vào lớp -->
+              <div>
+                <label for="class_start_time" class="block mb-2 text-sm font-medium text-gray-300">Giờ vào lớp (tính trễ)</label>
+                <div class="relative">
+                  <i class="fas fa-calendar-alt absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                  <input type="datetime-local" id="class_start_time" name="class_start_time" required
+                         class="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-gray-100
+                                focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"/>
+                </div>
+                <p class="mt-2 text-xs text-gray-500">Mẹo: hệ thống sẽ tự tính <em>giờ kết thúc</em> theo thời lượng.</p>
+              </div>
+
+              <!-- Thời gian điểm danh -->
+              <div>
+                <label for="duration" class="block mb-2 text-sm font-medium text-gray-300">Thời gian điểm danh</label>
+                <div class="relative">
+                  <i class="fas fa-clock absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                  <select id="duration" name="duration"
+                          class="w-full pl-10 pr-10 py-3 bg-gray-800 border border-gray-700 rounded-lg text-gray-100
+                                 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                    <option value="15">15 phút</option>
+                    <option value="30">30 phút</option>
+                    <option value="45">45 phút</option>
+                    <option value="60" selected>60 phút (1 giờ)</option>
+                    <option value="90">90 phút (1.5 giờ)</option>
+                    <option value="120">120 phút (2 giờ)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3 pt-2">
+              <button type="submit"
+                      class="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg
+                             bg-gradient-to-r from-blue-600 to-teal-500 hover:from-blue-700 hover:to-teal-600
+                             text-white font-semibold shadow-lg shadow-blue-900/20 transition">
+                <i class="fas fa-play-circle text-lg"></i>
+                Bắt đầu phiên
+              </button>
+              <button type="reset"
+                      class="px-5 py-3 rounded-lg border border-gray-700 hover:border-gray-600 text-gray-300 hover:text-white
+                             bg-gray-800 hover:bg-gray-700 transition">
+                <i class="fa-solid fa-eraser"></i>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Summary (1 cột) -->
+      <aside class="space-y-6">
+        <div class="rounded-2xl bg-gray-900 border border-gray-800 p-6 sticky top-6">
+          <h3 class="text-base font-semibold mb-4 flex items-center gap-2">
+            <i class="fa-solid fa-circle-info text-blue-400"></i> Tóm tắt phiên
+          </h3>
+
+          <div class="space-y-4">
+            <div class="p-4 rounded-xl bg-gray-800 border border-gray-700">
+              <p class="text-xs uppercase tracking-wider text-gray-400">Môn học</p>
+              <p id="pv_subject" class="text-sm font-medium mt-1">—</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div class="p-4 rounded-xl bg-gray-800 border border-gray-700">
+                <p class="text-xs uppercase tracking-wider text-gray-400">Mã môn</p>
+                <p id="pv_code" class="text-sm font-medium mt-1">—</p>
+              </div>
+              <div class="p-4 rounded-xl bg-gray-800 border border-gray-700">
+                <p class="text-xs uppercase tracking-wider text-gray-400">Lớp</p>
+                <p id="pv_class" class="text-sm font-medium mt-1">—</p>
+              </div>
+            </div>
+
+            <div class="p-4 rounded-xl bg-gray-800 border border-gray-700">
+              <p class="text-xs uppercase tracking-wider text-gray-400">Thời gian</p>
+              <p class="text-sm mt-1">
+                Bắt đầu: <span id="pv_start" class="font-medium">—</span>
+              </p>
+              <p class="text-sm">
+                Kết thúc dự kiến: <span id="pv_end" class="font-medium">—</span>
+              </p>
+              <p class="text-xs text-gray-500 mt-1">
+                * Tính theo <span id="pv_duration">60 phút</span> cài đặt.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-2xl bg-gradient-to-br from-blue-950/60 to-gray-900 border border-blue-900/40 p-6">
+          <h4 class="font-semibold mb-2 text-blue-200">Gợi ý</h4>
+          <ul class="text-sm text-gray-300 list-disc list-inside space-y-1">
+            <li>Thiết lập đúng giờ để tính trễ chính xác.</li>
+            <li>Nhập đúng mã lớp giúp đồng bộ báo cáo.</li>
+            <li>Có thể thay đổi thời lượng để mở rộng cửa sổ điểm danh.</li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <footer class="py-8 text-center text-xs text-gray-500">
+    © 2025 Điểm danh AI — InsightFace • Django
+  </footer>
+
+  <!-- Script: sync preview + auto end-time -->
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    const subject = $('subject_name');
+    const code = $('subject_code');
+    const klass = $('class_name');
+    const start = $('class_start_time');
+    const duration = $('duration');
+
+    const pvSubject = $('pv_subject');
+    const pvCode = $('pv_code');
+    const pvClass = $('pv_class');
+    const pvStart = $('pv_start');
+    const pvEnd = $('pv_end');
+    const pvDuration = $('pv_duration');
+
+    // defaults: set now rounded to 5 mins
+    (function setDefaultTime(){
+      const d = new Date();
+      d.setSeconds(0,0);
+      const round5 = Math.ceil(d.getMinutes()/5)*5;
+      d.setMinutes(round5);
+      const tzOff = d.getTimezoneOffset();
+      const local = new Date(d.getTime() - tzOff*60000).toISOString().slice(0,16);
+      start.value = local;
+      updatePreview();
+    })();
+
+    function fmtDisplay(dtString){
+      if(!dtString) return '—';
+      const d = new Date(dtString);
+      if (isNaN(d)) return '—';
+      return d.toLocaleString([], { hour12:false });
+    }
+
+    function addMinutes(dtString, mins){
+      if(!dtString) return '';
+      const d = new Date(dtString);
+      if (isNaN(d)) return '';
+      d.setMinutes(d.getMinutes() + Number(mins||0));
+      // return display, not input-value
+      return d.toLocaleString([], { hour12:false });
+    }
+
+    function updatePreview(){
+      pvSubject.textContent = subject.value || '—';
+      pvCode.textContent    = code.value || '—';
+      pvClass.textContent   = klass.value || '—';
+
+      pvStart.textContent = fmtDisplay(start.value);
+      pvEnd.textContent   = addMinutes(start.value, duration.value);
+      pvDuration.textContent = `${duration.value} phút`;
+    }
+
+    [subject, code, klass, start, duration].forEach(el => {
+      el && el.addEventListener('input', updatePreview);
+      el && el.addEventListener('change', updatePreview);
+    });
+  </script>
+</body>
+</html>
