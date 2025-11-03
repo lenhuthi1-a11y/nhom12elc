@@ -124,5 +124,11 @@ MEDIA_ROOT = BASE_DIR / "app" / "data"
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+import os
+import dj_database_url
+
 ALLOWED_HOSTS = ['*']
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
