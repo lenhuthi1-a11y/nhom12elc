@@ -1,1 +1,6 @@
+# Bỏ qua thư mục môi trường ảo và các file không cần thiết
 .venv/
+__pycache__/
+*.pyc
+db.sqlite3
+*.log
